@@ -1,0 +1,20 @@
+{
+  "name": "forktracking",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node main.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "async": "^2.6.1",
+    "fs-extra": "^7.0.1",
+    "image-downloader": "^3.4.1",
+    "request": "^2.88.0",
+    "request-promise": "^4.2.2",
+    "scrape-it": "^5.1.0"
+  }
+}

@@ -1,0 +1,12 @@
+
+Input: main repo etc https://github.com/mibook/gr
+
+Output: Get a folder with all diffs from its forked repos
+
+
+1.Get list of forks:
+https://github.com/mibook/gr/network/members
+We actually need all the  member names
+#network > div:nth-child(2) > a:nth-child(3)
+
+https://github.com/mibook/gr/compare/gh-pages...chrishham:gh-pages
