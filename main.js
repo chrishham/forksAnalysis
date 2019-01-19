@@ -34,12 +34,8 @@ function testFunction () {
   // const download = require('image-downloader')
 
   // Download to a directory and save with the original filename
-  const options = {
-    url: testUrl,
-    dest: './'                  // Save to /path/to/dest/image.jpg
-  }
 
-  download.image(options)
+  downloadImage(testUrl)
     .then(({ filename, image }) => {
       console.log('File saved to', filename)
     })
@@ -92,6 +88,7 @@ function scrapeWithConcurrency (pagesToScrape, pagesConcurrency) {
         .then(() => {
           callback()
         })
+        .catch(error => reject(error))
     }, pagesConcurrency)
     /* KickStart Scraping with first pagesConcurrency pages */
     q.push(pagesToScrape.splice(0, pagesConcurrency), function (err) {
@@ -111,14 +108,14 @@ function scrapeWithConcurrency (pagesToScrape, pagesConcurrency) {
 
 function parseDiffs () {
   let arrayOfDiffs = []
-  fs.readdir('diffs')
+  fs.mkdirp('output/images')
+    .then(() => {
+      return fs.readdir('diffs')
+    })
     .then(files => {
+      let arrayOfPromises = []
       files.forEach(file => {
-        if (fs.statSync('diffs/' + file).size === 0) {
-          console.log(file + ' has zero size')
-        }
         let user = { name: file, additions: [] }
-        // if (file === 'akontinis') {
         let content = fs.readFileSync('diffs/' + file, 'UTF8')
         content = content.split('\n')
         let imageFound, captionFound, titleFound
@@ -136,33 +133,31 @@ function parseDiffs () {
           if (line.slice(0, 11) === '+image_url:') {
             if (imageFound) newAddition()
             imageFound = true
-            console.log('new image: ' + 'https://raw.githubusercontent.com/' + file + '/gr/' + branchToCompare + line.slice(12))
+            // console.log('new image: ' + 'https://raw.githubusercontent.com/' + file + '/gr/' + branchToCompare + line.slice(12))
             user.additions[counter].img = 'https://raw.githubusercontent.com/' + file + '/gr/' + branchToCompare + line.slice(12)
+            // arrayOfPromises.push(downloadImage(user.additions[counter].img))
           }
           if (line.slice(0, 7) === '+title:') {
             if (titleFound) newAddition()
             titleFound = true
-            console.log('title: ' + line.slice(8))
+            // console.log('title: ' + line.slice(8))
             user.additions[counter].title = line.slice(8)
           }
           if (line.slice(0, 9) === '+caption:') {
             if (captionFound) newAddition()
             captionFound = true
-            console.log('caption: ' + line.slice(10))
+            // console.log('caption: ' + line.slice(10))
             user.additions[counter].caption = line.slice(10)
           }
         }
         arrayOfDiffs.push(user)
-        // }
       })
-      // console.log(JSON.stringify(arrayOfDiffs))
-      fs.writeFileSync('test.html', createSimpleVueFile(JSON.stringify(arrayOfDiffs)))
+      fs.writeFileSync('output/index.html', createSimpleVueFile(JSON.stringify(arrayOfDiffs)))
+      return Promise.all(arrayOfPromises)
     })
+    .then(() => console.log('Finished Ok!'))
     .catch(error => console.log(error))
 }
-
-// +title: Spotify Music  (9)
-// +caption: 'Το Spotify εί (12)
 
 function createSimpleVueFile (forks) {
   return `
@@ -200,8 +195,6 @@ function createSimpleVueFile (forks) {
       el: '#app',
       data: {
         forks: ${forks}
-      },
-      methods: {
       }
     })
   </script>
@@ -209,4 +202,12 @@ function createSimpleVueFile (forks) {
 
 </html>
 `
+}
+
+function downloadImage (url) {
+  const options = {
+    url,
+    dest: 'output/images/'                  // Save to /path/to/dest/image.jpg
+  }
+  return download.image(options)
 }
